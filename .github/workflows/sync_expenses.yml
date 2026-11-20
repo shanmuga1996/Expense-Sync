@@ -1,0 +1,39 @@
+name: Sync Zoho Books Expenses to Zoho Analytics
+
+on:
+  schedule:
+    - cron: "30 0 * * *" # 6:00 AM IST daily
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Fetch Zoho Books Expenses
+        env:
+          ZOHO_CLIENT_ID: ${{ secrets.ZOHO_CLIENT_ID }}
+          ZOHO_CLIENT_SECRET: ${{ secrets.ZOHO_CLIENT_SECRET }}
+          ZOHO_BOOKS_REFRESH_TOKEN: ${{ secrets.ZOHO_BOOKS_REFRESH_TOKEN }}
+          DATE_START: "2026-10-01"
+        run: |
+          chmod +x fetch_zoho_expenses.sh
+          ./fetch_zoho_expenses.sh
+
+      - name: Push to Zoho Analytics
+        env:
+          ZOHO_CLIENT_ID: ${{ secrets.ZOHO_CLIENT_ID }}
+          ZOHO_CLIENT_SECRET: ${{ secrets.ZOHO_CLIENT_SECRET }}
+          ZOHO_ANALYTICS_REFRESH_TOKEN: ${{ secrets.ZOHO_ANALYTICS_REFRESH_TOKEN }}
+        run: python push_to_analytics.py
